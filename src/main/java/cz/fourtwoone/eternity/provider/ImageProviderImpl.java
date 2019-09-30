@@ -8,19 +8,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class ImageProviderImpl implements ImageProvider {
 
-/*
-	private static ImageProvider instance;
-
-	private ImageProvider() {
-	}
-
-	public static ImageProvider getInstance() {
-		if (instance == null) {
-			instance = new ImageProvider();
-		}
-		return instance;
-	}*/
-
 	public PackageResourceReference getImageRef(int pieceCount, OrientedPiece piece) {
 		int id = piece.getId();
 		int orientation = piece.getOrientation().getIntOrientation();

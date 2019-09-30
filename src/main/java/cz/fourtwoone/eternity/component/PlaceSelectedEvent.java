@@ -6,22 +6,16 @@ import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.event.IEvent;
 import org.apache.wicket.event.IEventSource;
 
-public class PieceClickEvent implements IEvent {
+public class PlaceSelectedEvent implements IEvent {
 
-	final OrientedPiece piece;
 	final AjaxRequestTarget target;
 
-	public PieceClickEvent(OrientedPiece piece, AjaxRequestTarget target) {
-		this.piece = piece;
+	public PlaceSelectedEvent(AjaxRequestTarget target) {
 		this.target = target;
 	}
 
 	public AjaxRequestTarget getTarget() {
 		return target;
-	}
-
-	public OrientedPiece getPiece() {
-		return piece;
 	}
 
 	@Override

@@ -24,15 +24,9 @@ public class BoardPanel extends GenericPanel<Board> {
 
 	IModel<Point> selectedPlaceModel;
 
-	Consumer<PieceSelectAction> onPieceClick;
-
 	public BoardPanel(String id, IModel<Board> model, IModel<Point> place) {
 		super(id, model);
 		selectedPlaceModel = place;
-	}
-
-	public void setOnPieceClick(Consumer<PieceSelectAction> onPieceClick) {
-		this.onPieceClick = onPieceClick;
 	}
 
 	@Override
@@ -68,8 +62,7 @@ public class BoardPanel extends GenericPanel<Board> {
 								board.getBoardSize().y - 1 - item.getIndex() / board.getBoardSize().x);
 						selectedPlaceModel.setObject(place);
 						BoardPanel.this.modelChanged();
-						BoardPanel.this.send(getPage(), Broadcast.EXACT, new PieceClickEvent(target));
-//						BoardPanel.this.onPieceClick.accept(new PieceSelectAction(place, target));
+						BoardPanel.this.send(getPage(), Broadcast.EXACT, new PlaceSelectedEvent(target));
 					}
 				};
 				item.add(link);
@@ -90,6 +83,6 @@ public class BoardPanel extends GenericPanel<Board> {
 	}
 
 	private PackageResourceReference getImageRef(OrientedPiece piece) {
-		return ((WicketApplication) getApplication()).getImageProvider().getImageRef(36, piece);
+		return ((WicketApplication) getApplication()).getImageProvider().getImageRef(256, piece);
 	}
 }

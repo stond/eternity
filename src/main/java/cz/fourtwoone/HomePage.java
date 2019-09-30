@@ -2,24 +2,18 @@ package cz.fourtwoone;
 
 import cz.fourtwoone.eternity.component.BoardPanel;
 import cz.fourtwoone.eternity.component.PieceClickEvent;
-import cz.fourtwoone.eternity.component.PieceSelectAction;
+import cz.fourtwoone.eternity.component.PlaceSelectedEvent;
 import cz.fourtwoone.eternity.component.PossiblePanel;
 import cz.fourtwoone.eternity.model.Game;
 import cz.fourtwoone.eternity.model.OrientedPiece;
-import cz.fourtwoone.eternity.provider.ImageProvider;
-import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.IEvent;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
-import org.apache.wicket.request.resource.PackageResourceReference;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import java.awt.*;
 import java.util.List;
@@ -93,13 +87,21 @@ public class HomePage extends WebPage {
 	public void onEvent(IEvent<?> event) {
 		super.onEvent(event);
 
-		if (event.getPayload() instanceof PieceClickEvent) {
-			System.out.println("EVENT");
-			this.getGame().remove(this.selectedPlace);
+		if (event.getPayload() instanceof PlaceSelectedEvent) {
+			this.getGame().remove(this.selectedPlaceModel.getObject());
 			selectionLabel.detach();
 			possibleModel.detach();
-			AjaxRequestTarget target = ((PieceClickEvent)event.getPayload()).getTarget();
+			AjaxRequestTarget target = ((PlaceSelectedEvent)event.getPayload()).getTarget();
 			target.add(this.selectionLabel);
+			target.add(this.possiblePanel);
+			target.add(this.boardPanel);
+		} else if (event.getPayload() instanceof PieceClickEvent) {
+			PieceClickEvent myEvent = ((PieceClickEvent)event.getPayload());
+			OrientedPiece op = myEvent.getPiece();
+			AjaxRequestTarget target = myEvent.getTarget();
+			this.getGame().place(op, this.selectedPlaceModel.getObject());
+			possibleModel.detach();
+			boardPanel.detach();
 			target.add(this.possiblePanel);
 			target.add(this.boardPanel);
 		}

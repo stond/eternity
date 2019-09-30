@@ -38,16 +38,9 @@ public class WicketApplication extends WebApplication {
 	public void init() {
 		super.init();
 
-//		ApplicationContext ctx = new AnnotationConfigApplicationContext();
 		ApplicationContext ctx = new ClassPathXmlApplicationContext("context.xml");
 		imageProvider = (ImageProvider) ctx.getBean("imageProvider");
 		game = (Game) ctx.getBean("game");
-//		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
-		//Scan package for annotated beans
-//		ctx.scan("cz.fourtwoone.eternity.provider");
-//		ctx.refresh();
-
-//		getComponentInstantiationListeners().add(new SpringComponentInjector(this, ctx));
 
 	}
 

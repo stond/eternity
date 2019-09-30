@@ -4,7 +4,6 @@ import cz.fourtwoone.HomePage;
 
 import java.awt.*;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
@@ -22,8 +21,8 @@ public class Game implements Serializable {
 	private Board board;
 
 	public Game() {
-		this.boardSize = new Point(6,6);
-		this.pieces = loadPieces(36);
+		this.boardSize = new Point(16, 16);
+		this.pieces = loadPieces(256);
 		this.freePieces = new HashSet<>();
 		this.freePieces.addAll(List.of(pieces));
 		this.board = new Board(boardSize);
@@ -76,18 +75,15 @@ public class Game implements Serializable {
 	}
 
 	public static Piece[] loadPieces(int pieceCount) {
-		File file = new File("" + pieceCount + ".csv");
 		List<Piece> pieces = new LinkedList<>();
 
 		ClassLoader classLoader = HomePage.class.getClassLoader();
 
-		try (InputStream inputStream = classLoader.getResourceAsStream("" + pieceCount + "/" + pieceCount + ".xml")) {
+		try (InputStream inputStream = classLoader.getResourceAsStream(pieceCount + ".csv")) {
 			BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
 
 			String st;
-			Integer line = 0;
 			while ((st = br.readLine()) != null) {
-				line++;
 				String[] strParts = st.split(",");
 				if (strParts.length == 5) {
 					int[] parts = Arrays.stream(strParts).mapToInt(Integer::valueOf).toArray();
@@ -95,7 +91,7 @@ public class Game implements Serializable {
 				}
 			}
 		} catch (Exception ex) {
-			System.out.println(ex.getMessage());
+			System.out.println(ex);
 		}
 		return pieces.toArray(new Piece[]{});
 	}
@@ -133,11 +129,15 @@ public class Game implements Serializable {
 	}
 
 	public boolean place(Piece piece, Orientation orientation, Point place) {
-		if (!freePieces.contains(piece)) {
+		return place(new OrientedPiece(piece, orientation), place);
+	}
+
+	public boolean place(OrientedPiece orientedPiece, Point place) {
+		if (!freePieces.contains(orientedPiece.getPiece())) {
 			return false;
 		}
-		if (this.board.place(new OrientedPiece(piece, orientation), place)) {
-			freePieces.remove(piece);
+		if (this.board.place(orientedPiece, place)) {
+			freePieces.remove(orientedPiece.getPiece());
 			return true;
 		} else {
 			return false;

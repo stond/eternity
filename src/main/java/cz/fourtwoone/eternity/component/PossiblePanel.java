@@ -1,10 +1,10 @@
 package cz.fourtwoone.eternity.component;
 
-import cz.fourtwoone.HomePage;
 import cz.fourtwoone.WicketApplication;
 import cz.fourtwoone.eternity.model.OrientedPiece;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
+import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.image.Image;
@@ -18,20 +18,13 @@ import org.apache.wicket.request.resource.PackageResourceReference;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Consumer;
 
 public class PossiblePanel extends GenericPanel<List<OrientedPiece>> {
 
 	IDataProvider<OrientedPiece> provider;
 
-	Consumer<PlacePieceAction> onPlacePiece;
-
 	public PossiblePanel(String id, IModel<List<OrientedPiece>> model) {
 		super(id, model);
-	}
-
-	public void setOnPlacePiece(Consumer<PlacePieceAction> onPlacePiece) {
-		this.onPlacePiece = onPlacePiece;
 	}
 
 	@Override
@@ -67,7 +60,7 @@ public class PossiblePanel extends GenericPanel<List<OrientedPiece>> {
 				AjaxLink link = new AjaxLink<OrientedPiece>("placeLink") {
 					@Override
 					public void onClick(AjaxRequestTarget target) {
-						PossiblePanel.this.onPlacePiece.accept(new PlacePieceAction(piece, target));
+						PossiblePanel.this.send(getPage(), Broadcast.EXACT, new PieceClickEvent(piece, target));
 					}
 				};
 				item.add(link);
@@ -97,18 +90,8 @@ public class PossiblePanel extends GenericPanel<List<OrientedPiece>> {
 		add(possiblePiecesPanel);
 	}
 
-	public class PlacePieceAction {
-		public final OrientedPiece piece;
-//		public final AjaxRequestTarget target;
-
-		public PlacePieceAction(OrientedPiece piece, AjaxRequestTarget target) {
-			this.piece = piece;
-//			this.target = target;
-		}
-	}
-
 	private PackageResourceReference getImageRef(OrientedPiece piece) {
-		return ((WicketApplication)getApplication()).getImageProvider().getImageRef(36, piece);
+		return ((WicketApplication) getApplication()).getImageProvider().getImageRef(256, piece);
 	}
 
 }
