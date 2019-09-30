@@ -21,6 +21,14 @@ public class Game implements Serializable {
 	private Set<Piece> freePieces;
 	private Board board;
 
+	public Game() {
+		this.boardSize = new Point(6,6);
+		this.pieces = loadPieces(36);
+		this.freePieces = new HashSet<>();
+		this.freePieces.addAll(List.of(pieces));
+		this.board = new Board(boardSize);
+	}
+
 	public Game(Point boardSize, Piece[] pieces) {
 
 		this.boardSize = boardSize;

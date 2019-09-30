@@ -1,22 +1,25 @@
 package cz.fourtwoone;
 
 import cz.fourtwoone.eternity.component.BoardPanel;
+import cz.fourtwoone.eternity.component.PieceClickEvent;
+import cz.fourtwoone.eternity.component.PieceSelectAction;
 import cz.fourtwoone.eternity.component.PossiblePanel;
 import cz.fourtwoone.eternity.model.Game;
 import cz.fourtwoone.eternity.model.OrientedPiece;
-import cz.fourtwoone.eternity.model.Piece;
+import cz.fourtwoone.eternity.provider.ImageProvider;
+import org.apache.wicket.ajax.AjaxEventBehavior;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.event.IEvent;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.image.Image;
-import org.apache.wicket.markup.repeater.Item;
-import org.apache.wicket.markup.repeater.data.GridView;
-import org.apache.wicket.markup.repeater.data.ListDataProvider;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.request.resource.PackageResourceReference;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import java.awt.*;
 import java.util.List;
@@ -28,21 +31,23 @@ public class HomePage extends WebPage {
 	private Game game;
 	private BoardPanel boardPanel;
 	private PossiblePanel possiblePanel;
+	private Label selectionLabel;
+	private IModel<List<OrientedPiece>> possibleModel;
 
 	public HomePage(final PageParameters parameters) {
 		super(parameters);
 
-		game = Game.createGame(36);
-//		game = Game.createSmallGame();
-/*		game.place(game.getPieces()[0], Orientation.W, new Point(0, 2));
-		game.place(game.getPieces()[1], Orientation.N, new Point(2, 2));
-//		game.place(game.getPieces()[2], Orientation.E, new Point(2, 0));
-//		game.place(game.getPieces()[3], Orientation.S, new Point(0, 0));
-		game.place(game.getPieces()[4], Orientation.N, new Point(1, 2));
-		game.place(game.getPieces()[5], Orientation.E, new Point(2, 1));
-//		game.place(game.getPieces()[6], Orientation.S, new Point(1, 0));
-		game.place(game.getPieces()[7], Orientation.W, new Point(0, 1));
-		game.place(game.getPieces()[8], Orientation.N, new Point(1, 1));*/
+//		game = getGame().createGame(36);
+//		game = getGame().createSmallGame();
+/*		getGame().place(getGame().getPieces()[0], Orientation.W, new Point(0, 2));
+		getGame().place(getGame().getPieces()[1], Orientation.N, new Point(2, 2));
+//		getGame().place(getGame().getPieces()[2], Orientation.E, new Point(2, 0));
+//		getGame().place(getGame().getPieces()[3], Orientation.S, new Point(0, 0));
+		getGame().place(getGame().getPieces()[4], Orientation.N, new Point(1, 2));
+		getGame().place(getGame().getPieces()[5], Orientation.E, new Point(2, 1));
+//		getGame().place(getGame().getPieces()[6], Orientation.S, new Point(1, 0));
+		getGame().place(getGame().getPieces()[7], Orientation.W, new Point(0, 1));
+		getGame().place(getGame().getPieces()[8], Orientation.N, new Point(1, 1));*/
 
 		this.selectedPlaceModel = new LoadableDetachableModel<>() {
 			@Override
@@ -52,76 +57,81 @@ public class HomePage extends WebPage {
 		};
 	}
 
-	public static PackageResourceReference getImage(String imgFile) {
-		return new PackageResourceReference(HomePage.class, "36/" + imgFile);
-	}
+/*	public PackageResourceReference getImageRef(OrientedPiece piece) {
+		return imageProvider.getImageRef(36, piece);
+	}*/
 
 	@Override
 	protected void onInitialize() {
 		super.onInitialize();
 
-		add(new Label("version", "Eternity " + game.getBoardSize().getX() + ", " + game.getBoardSize()));
-		Label selectionLabel = new Label("selection", LoadableDetachableModel.of(() ->
-				selectedPlace == null ? "selection [-]" : "selection [" + selectedPlace.x + ", " + selectedPlace.y + "]"));
-		selectionLabel.setOutputMarkupId(true);
+		add(new Label("version", "Eternity " + getGame().getBoardSize().getX() + ", " + getGame().getBoardSize()));
+		selectionLabel = new Label("selection", LoadableDetachableModel.of(() -> {
+					Point place = selectedPlaceModel.getObject();
+					return place == null ? "selection [-]" : "selection [" + place.x + ", " + place.y + "]";
+				}));
+		selectionLabel.setOutputMarkupPlaceholderTag(true);
 		add(selectionLabel);
 
-		IModel<List<OrientedPiece>> possibleModel = new LoadableDetachableModel<List<OrientedPiece>>() {
+		possibleModel = new LoadableDetachableModel<List<OrientedPiece>>() {
 			@Override
 			protected List<OrientedPiece> load() {
-				return game.getPossiblePieces(selectedPlace);
+				return getGame().getPossiblePieces(selectedPlaceModel.getObject());
 			}
 		};
 		possiblePanel = createPossiblePanel(possibleModel);
 
-
-		boardPanel = new BoardPanel("boardPanel", new PropertyModel<>(game, "board"), Model.of(selectedPlace));
+		boardPanel = new BoardPanel("boardPanel", new PropertyModel<>(getGame(), "board"),
+				selectedPlaceModel);
 		boardPanel.setOutputMarkupId(true);
-		boardPanel.setOnPieceClick((action) -> {
-			this.selectedPlace = action.place;
-			this.game.remove(this.selectedPlace);
-			this.selectedPlaceModel.detach();
-			selectionLabel.detach();
-			possibleModel.detach();
-			action.target.add(selectionLabel);
-			action.target.add(possiblePanel);
-			action.target.add(boardPanel);
-		});
 		add(boardPanel);
 
 		add(possiblePanel);
+	}
 
-		GridView<Piece> freeView = createFreePiecesPanel(game);
-		add(freeView);
+	@Override
+	public void onEvent(IEvent<?> event) {
+		super.onEvent(event);
 
-		add(possiblePanel);
+		if (event.getPayload() instanceof PieceClickEvent) {
+			System.out.println("EVENT");
+			this.getGame().remove(this.selectedPlace);
+			selectionLabel.detach();
+			possibleModel.detach();
+			AjaxRequestTarget target = ((PieceClickEvent)event.getPayload()).getTarget();
+			target.add(this.selectionLabel);
+			target.add(this.possiblePanel);
+			target.add(this.boardPanel);
+		}
+
 	}
 
 	private PossiblePanel createPossiblePanel(IModel<List<OrientedPiece>> possibleModel) {
 		PossiblePanel possiblePanel = new PossiblePanel("possiblePanel", possibleModel);
 		possiblePanel.setOutputMarkupId(true);
+/*
 		possiblePanel.setOnPlacePiece((action) -> {
 			OrientedPiece pieceToPlace = action.piece;
-			game.place(pieceToPlace.getPiece(), pieceToPlace.getOrientation(), selectedPlace);
+			getGame().place(pieceToPlace.getPiece(), pieceToPlace.getOrientation(), selectedPlace);
 			action.target.add(this.boardPanel);
 			action.target.add(this.possiblePanel);
 		});
+*/
 		return possiblePanel;
 	}
 
-	@Override
-	protected void onConfigure() {
-		super.onConfigure();
+	private Game getGame() {
+		return ((WicketApplication)getApplication()).game;
 	}
 
-	private GridView<Piece> createFreePiecesPanel(Game g) {
+/*	private GridView<Piece> createFreePiecesPanel(Game g) {
 		GridView<Piece> freeView = new GridView<Piece>("freeRows", new ListDataProvider<>(g.getFreePieces())) {
 			@Override
 			protected void populateItem(Item<Piece> item) {
 				final Piece piece = item.getModelObject();
 				int id = piece.getId();
 				String imgFile = id == 0 ? "piece_empty.jpg" : String.format("piece_%03d_0.jpg", id);
-				item.add(new Image("freeImg", getImage(imgFile)));
+				item.add(new Image("freeImg", getImageRef(new OrientedPiece(piece, Orientation.N))));
 			}
 
 			@Override
@@ -132,6 +142,8 @@ public class HomePage extends WebPage {
 		freeView.setRows(9);
 		freeView.setColumns(1);
 		return freeView;
-	}
+	}*/
+
+
 
 }
