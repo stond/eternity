@@ -19,7 +19,7 @@ public class Piece implements Serializable {
         return id;
     }
 
-    int getColor(Orientation orientation) {
+    public int getColor(Orientation orientation) {
         return colors[orientation.getIntOrientation()];
     }
 }
