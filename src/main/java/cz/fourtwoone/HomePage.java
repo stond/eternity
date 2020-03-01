@@ -4,6 +4,7 @@ import cz.fourtwoone.eternity.component.BoardPanel;
 import cz.fourtwoone.eternity.component.PieceClickEvent;
 import cz.fourtwoone.eternity.component.PlaceSelectedEvent;
 import cz.fourtwoone.eternity.component.PossiblePanel;
+import cz.fourtwoone.eternity.component.StatisticsPanel;
 import cz.fourtwoone.eternity.model.Game;
 import cz.fourtwoone.eternity.model.OrientedPiece;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -79,6 +80,8 @@ public class HomePage extends WebPage {
 				selectedPlaceModel);
 		boardPanel.setOutputMarkupId(true);
 		add(boardPanel);
+
+		add(new StatisticsPanel("histogramPanel", new PropertyModel<>(getGame(), "freePieces")));
 
 		add(possiblePanel);
 	}
